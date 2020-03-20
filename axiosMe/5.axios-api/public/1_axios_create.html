@@ -22,13 +22,19 @@
 
 let btn1 = document.getElementById('btn1')
 let btn2 = document.getElementById('btn2')
-//设置请求的基本路径
+
+//设置请求的基本路径，axios的配置
 axios.default.baseURL = 'http://localhost:3000'
 
+// axios2的配置
 const axios2 = axios.create({
   baseURL: 'http://localhost:5000',
   timeout: 1000, //超时时间
 });
+const axios3 = axios.create({
+	baseURL:'http://localhost:5000',
+	timeout:1000,
+})
 
 btn1.onclick = ()=>{
 	console.log(axios.all);

@@ -11,32 +11,35 @@
 	<button onclick="abolish()">取消请求</button><br><br>
 
 	<script type="text/javascript">
-
+	
 	const {CancelToken,isCancel} = axios
+  console.log(axios.CancelToken)
 	let cancel
-
+	//getData函数用于发送请求获取数据
 	function getData(){
 		axios({
-			url:'http://localhost:3001/get_data1',
+			url:'http://localhost:3000/get_data1',
 			method:'get',
-			cancelToken:new CancelToken((c)=>{
-				//c() //c是一个函数，由axios底层传递过来的，用于取消本次请求。
-				cancel = c
+			//想要取消请求就必须在发送请求时,在config对象中写下面的属性,其值是一个CancleToken构造函数的实例
+			//其中c是其指定的一个取消请求的函数,C被调用,请求就取消
+			//CancleToken是axios身上的一个方法
+			cancelToken: new CancelToken((c) => {
+				cancel = c//将取消请求的函数存在全局变量中,想取消的时候就调用
 			})
 		}).then(
-			response => {console.log('获取所有人成功',response.data);},
-			error => {
+			(response) => {console.log('请求成功啦',response.data)},
+			(error) => {
 				if(isCancel(error)){
-					console.log('用户取消了请求',error.message);
+					console.log('我取消了请求',error)
 				}else{
-					console.log('获取所所有人失败',error.message);
+					console.log('我请求失败了',error)
 				}
-			}
+				}
 		)
 	}
-
 	function abolish(){
-		cancel('任性，这次请求就不要了')
+		console.log('取消请求')
+		cancel('我取消了请求')//会传递给请求失败的回调中的error一个CancleToken的实例
 	}
 
 	</script>

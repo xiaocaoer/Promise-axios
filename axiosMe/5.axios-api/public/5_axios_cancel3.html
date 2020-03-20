@@ -10,51 +10,86 @@
 	<button onclick="getData1()">点我获取数据1</button><br><br>
 	<button onclick="getData2()">点我获取数据2</button><br><br>
 
-	<script type="text/javascript">
+ <!-- 需求：两个发送请求的按钮，点第一个请求数据还没有回来的时候，点击第二个，第一次请求取消。
+			就是频繁 点两个按钮，算最后一次点击发送的请求，之前数据没有回来的请求都取消
+	url:'http://localhost:3000/get_data1',
+	'http://localhost:3000/get_data2', -->
 
-	const {CancelToken,isCancel} = axios
+<script type="text/javascript">
+
+	//.then中成功的结果可以交给await处理，失败的可以直接在响应拦截器中去处理，
+	//在config配置对象中增加的cancelToken属性可以交给请求拦截器
+	//取消请求的方法，在拦截器中写
+
+	const {isCancel,CancelToken} = axios
+ 	axios.defaults.baseURL = 'http://localhost:3000'
 	let cancel
-
+	
 	//请求拦截器
-	axios.interceptors.request.use((config)=>{
-		if(cancel) cancel('用户不想要了')
-		config.cancelToken = new CancelToken((c)=>{
-			//c() //c是一个函数，由axios底层传递过来的，用于取消本次请求。
-			cancel = c
-		})
+	axios.interceptors.request.use((config) => {
+		if(cancel) cancel('等不及了我取消') //如果时间间隔很小，请求还没回来，上次请求被取消
+		//往请求的配置对象中添加了取消请求的操作
+		config.cancelToken = new CancelToken((c) => {
+				cancel = c//c是用来取消请求的方法
+			})
 		return config
 	})
 
- //响应拦截器
+	//响应拦截器 处理请求失败（取消请求）的情况
 	axios.interceptors.response.use(
-		response => response.data,
-		error => {
-			if(isCancel(error)){
-				console.log('用户取消了请求，取消的原因是',error.message);
-			}else{
-				console.log('请求出错，出错的原因是：',error.message);
+		response => response.data ,
+			(error) => {
+				if(isCancel(error)){
+					console.log('我取消了请求',error.message)
+				}else{
+					console.log('请求失败',error.message)
+				}
+				//返回padding状态的实例，将失败的情况在响应拦截器中就处理完，不进行传递
+				return new Promise(() => {})
 			}
-			return new Promise(()=>{})
-		}
-	)
+		)
 
-	function getData1(){
-		axios({
-			url:'http://localhost:3000/get_data1',
+
+async function getData1(){
+		 let result1 =  await axios({
+			url:'/get_data1',
 			method:'get',
-		}).then(
-			response => {console.log('获取所有人成功1',response);},
-		)
-	}
-	function getData2(){
-		axios({
-			url:'http://localhost:3000/get_data2',
-			method:'get',
-		}).then(
-			response => {console.log('获取所有人成功2',response);},
-		)
+		})
+		console.log('请求成功的结果是',result1)
 	}
 
+	async	function getData2(){
+		let result2 = await axios({
+			url:'/get_data2',
+			method:'get',
+		})
+		console.log('请求成功的结果是',result2)
+	}
+
+	//await async内部原理，
+	// async function getData1(){
+	// 	if(cancel) cancel('等不及了我取消')
+	// 	 let result1 =  await axios({
+	// 		url:'/get_data1',
+	// 		method:'get',
+	// 	})
+	// 	console.log('请求成功的结果是',result1)
+	// }
+	// 上面等价于
+	// async function getData1(){
+	// 	if(cancel) cancel('等不及了我取消')
+	// 	 let result1 
+	// 	 axios({
+	// 		url:'/get_data1',
+	// 		method:'get',
+	// 	}).then(
+	// 		(value) => {
+	// 			result1 = value
+	// 			console.log('请求成功的结果是',result1)
+	// 		}
+	// 	)
+		
+	// }
 	</script>
 
 </body>

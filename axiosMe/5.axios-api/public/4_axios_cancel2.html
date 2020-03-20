@@ -11,11 +11,15 @@
 	<button onclick="getData2()">点我获取数据2</button><br><br>
 	<script type="text/javascript">
 
+// 需求：两个发送请求的按钮，点第一个请求数据还没有回来的时候，点击第二个，第一次请求取消。
+// 			就是频繁 点两个按钮，算最后一次点击发送的请求，之前数据没有回来的请求都取消
+	
+	//
 	const {CancelToken,isCancel} = axios
 	let cancel
 
 	function getData1(){
-		if(cancel) cancel('等不及，不想要了')
+		if(cancel){cancel('1中等不及了，取消之前点的那次请求')}//cancle的字符串传给了.then方法中的errr中的message属性中
 		axios({
 			url:'http://localhost:3000/get_data1',
 			method:'get',
@@ -35,7 +39,7 @@
 		)
 	}
 	function getData2(){
-		if(cancel) cancel('等不及，不想要了')
+		if(cancel){cancel('2中等不及了，取消之前点的那次请求')}//这里如果说请求已经成功，数据回来了，那就取消不了，说明不是连续快速的点击
 		axios({
 			url:'http://localhost:3000/get_data2',
 			method:'get',
@@ -55,6 +59,10 @@
 		)
 	}
 		
+		//不足之处：请求中都要写开头的if判断，在config配置对象中增加的cancelToken属性，以及下面一模一样的.then 方法
+		//.then中成功的结果可以交给await处理，失败的可以直接在响应拦截器中去处理，
+		//在config配置对象中增加的cancelToken属性可以交给请求拦截器
+		//取消请求的方法调用往哪里写呢？
 	</script>
 </body>
 </html>
